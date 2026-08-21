@@ -13,5 +13,5 @@ export const WHITE_LABEL_CONFIG = {
   brandPrimary: "GATO PRETO",
   brandSecondary: "PREMIAÇÕES",
   theme: "emerald",
-  mode: "dark",
+  mode: "light",
 };
