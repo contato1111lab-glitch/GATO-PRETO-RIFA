@@ -13,7 +13,8 @@ export const AuthModal: React.FC = () => {
   }, [authModalMode]);
 
   // Login form state
-  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginCpf, setLoginCpf] = useState("");
+  const [loginPhone, setLoginPhone] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -51,15 +52,12 @@ export const AuthModal: React.FC = () => {
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError(null);
-    if (!loginIdentifier.trim()) {
-      setLoginError('Informe seu Telefone ou CPF.');
+    if (!loginCpf.trim() || !loginPhone.trim()) {
+      setLoginError("Informe seu CPF e Telefone.");
       return;
     }
-
-    setLoginLoading(true);
     try {
-      await login(loginIdentifier);
+      await login(loginCpf, loginPhone);
     } catch (err: any) {
       console.error(err);
       setLoginError(err.message || 'Erro ao realizar login. Verifique seus dados.');
@@ -90,6 +88,7 @@ export const AuthModal: React.FC = () => {
 
     setRegLoading(true);
     try {
+      await login(loginCpf, loginPhone);
       await register({
         fullName: regName.trim(),
         cpf: cleanCpf,
@@ -174,8 +173,24 @@ export const AuthModal: React.FC = () => {
                       required
                       autoFocus
                       placeholder="000.000.000-00"
-                      value={loginIdentifier}
-                      onChange={(e) => handleCpfChange(e, setLoginIdentifier)}
+                      value={loginCpf}
+                      onChange={(e) => handleCpfChange(e, setLoginCpf)}
+                      className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none transition-all placeholder:text-zinc-700"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">
+                    Telefone *
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+                    <input
+                      type="tel"
+                      required
+                      placeholder="(00) 00000-0000"
+                      value={loginPhone}
+                      onChange={(e) => handlePhoneChange(e, setLoginPhone)}
                       className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none transition-all placeholder:text-zinc-700"
                     />
                   </div>
@@ -184,7 +199,7 @@ export const AuthModal: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={loginLoading || !loginIdentifier.trim()}
+                disabled={loginLoading || !loginCpf.trim() || !loginPhone.trim()}
                 className="w-full bg-brand-primary hover:bg-brand-primary-dark disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-black py-4 rounded-2xl transition-all shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2 uppercase tracking-tight text-base mt-6 cursor-pointer disabled:cursor-not-allowed"
               >
                 {loginLoading ? <Loader2 className="animate-spin" size={20} /> : (
@@ -265,6 +280,22 @@ export const AuthModal: React.FC = () => {
                       value={regPhone}
                       onChange={(e) => handlePhoneChange(e, setRegPhone)}
                       className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">
+                    Telefone *
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+                    <input
+                      type="tel"
+                      required
+                      placeholder="(00) 00000-0000"
+                      value={loginPhone}
+                      onChange={(e) => handlePhoneChange(e, setLoginPhone)}
+                      className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none transition-all placeholder:text-zinc-700"
                     />
                   </div>
                 </div>

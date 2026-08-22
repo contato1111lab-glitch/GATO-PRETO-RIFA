@@ -164,6 +164,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ raffle, quantity, 
       if (payData && payData.success) {
         const purchaseId = payData.purchaseId;
         setCreatedPurchaseId(purchaseId);
+
+        if (payData.profile) {
+          raffleService.setCustomerSession(payData.profile);
+          refreshCustomer();
+        }
+
         
         const code = payData.pixCode || '';
         let qr = payData.qrCode || '';

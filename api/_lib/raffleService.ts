@@ -124,36 +124,19 @@ export const raffleService = {
     if (data.user_id && data.user_id !== 'guest') {
       const { data: prof } = await supabase
         .from('profiles')
-        .select('id, full_name, cpf, phone, email, birth_date, cep, address, number, neighborhood, city, state, complement, role, created_at')
+        .select('id, full_name, cpf, phone, role, created_at')
         .eq('id', data.user_id)
         .maybeSingle();
       if (prof) {
-        const dbPhone = (prof.phone || '').replace(/\D/g, '');
-        const hasName = !!(prof.full_name && prof.full_name.trim() && !prof.full_name.startsWith('Cliente '));
-        const hasEmail = !!(prof.email && prof.email.includes('@') && !prof.email.includes('@example.invalid'));
-        const hasBirth = !!(prof.birth_date && prof.birth_date.trim());
-        const hasCep = !!(prof.cep && prof.cep.replace(/\D/g, '').length === 8);
-        const hasAddr = !!(prof.address && prof.address.trim());
-        const hasNum = !!(prof.number && prof.number.trim());
-        const hasNeigh = !!(prof.neighborhood && prof.neighborhood.trim());
-        const hasCity = !!(prof.city && prof.city.trim());
-        const hasState = !!(prof.state && prof.state.trim());
-        registrationComplete = hasName && hasEmail && hasBirth && hasCep && hasAddr && hasNum && hasNeigh && hasCity && hasState;
+        const dbPhone = (prof.phone || "").replace(/\D/g, "");
+        const hasName = !!(prof.full_name && prof.full_name.trim() && !prof.full_name.startsWith("Cliente "));
+        registrationComplete = hasName && dbPhone.length >= 10;
 
         profile = {
           id: prof.id,
           fullName: prof.full_name,
           cpf: prof.cpf,
           phone: prof.phone,
-          email: prof.email,
-          birthDate: prof.birth_date,
-          cep: prof.cep,
-          address: prof.address,
-          number: prof.number,
-          neighborhood: prof.neighborhood,
-          city: prof.city,
-          state: prof.state,
-          complement: prof.complement,
           role: prof.role,
           createdAt: prof.created_at
         };
@@ -1204,7 +1187,7 @@ export const raffleService = {
   async getUsersCRM(): Promise<any[]> {
     const { data: profiles, error } = await supabase
       .from('profiles')
-      .select('id, full_name, cpf, phone, email, city, state, role, created_at')
+      .select('id, full_name, cpf, phone, role, created_at')
       .order('created_at', { ascending: false })
       .limit(5000);
 
@@ -1276,7 +1259,7 @@ export const raffleService = {
   async adminGetAllPurchases(limit: number = 5000): Promise<any[]> {
     const { data, error } = await supabase
       .from('purchases')
-      .select('*, profiles(id, full_name, cpf, phone, email), raffles(id, name)')
+      .select('*, profiles(id, full_name, cpf, phone), raffles(id, name)')
       .order('created_at', { ascending: false })
       .limit(Math.min(Number(limit) || 5000, 5000));
 
@@ -1421,7 +1404,7 @@ export const raffleService = {
     if (purchase?.user_id) {
       const { data: prof } = await supabase
         .from('profiles')
-        .select('id, full_name, cpf, phone, email')
+        .select('id, full_name, cpf, phone')
         .eq('id', purchase.user_id)
         .maybeSingle();
       profile = prof;

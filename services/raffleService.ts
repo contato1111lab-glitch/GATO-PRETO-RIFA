@@ -42,11 +42,11 @@ export const raffleService = {
     if (!res.ok || !data.success) throw new Error(data.error || 'Erro ao atualizar notificação');
   },
 
-  async loginCustomer(identifier: string, password?: string) {
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', identifier, password })
+  async loginCustomer(cpf: string, phone: string) {
+    const res = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "login", cpf, phone })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error);

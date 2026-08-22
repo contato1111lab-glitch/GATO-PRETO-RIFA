@@ -45,21 +45,25 @@ export default async function handler(req: any, res: any) {
     // 1. Setup User Profile First
     const cleanCpf = payer.cpf.replace(/\D/g, '');
     let userId = 'guest';
+    let userProfile = null;
 
     if (cleanCpf) {
       // Find or create profile
-      const { data: existingUser } = await supabase.from('profiles').select('id').eq('cpf', cleanCpf).maybeSingle();
+      const { data: existingUser } = await supabase.from("profiles").select("id, full_name, cpf, phone, role").eq("cpf", cleanCpf).maybeSingle();
       if (existingUser) {
         userId = existingUser.id;
+        userProfile = existingUser;
       } else {
         const { data: newUser, error: uErr } = await supabase.from('profiles').insert({
           full_name: payer.name,
           cpf: cleanCpf,
           phone: payer.phone?.replace(/\D/g, ''),
-          email: payer.email,
           role: 'user'
-        }).select('id').single();
-        if (newUser) userId = newUser.id;
+        }).select("id, full_name, cpf, phone, role").single();
+        if (newUser) {
+          userId = newUser.id;
+          userProfile = newUser;
+        }
       }
     }
 
@@ -188,6 +192,13 @@ export default async function handler(req: any, res: any) {
       status: result.status || 'pending',
       internalId: result.internal_id,
       isInMargin: reservation.is_in_margin || false,
+      profile: userProfile ? {
+        id: userProfile.id,
+        fullName: userProfile.full_name,
+        cpf: userProfile.cpf,
+        phone: userProfile.phone,
+        role: userProfile.role
+      } : null,
       expirationMinutes: reservation.expiration_minutes || 15
     });
 

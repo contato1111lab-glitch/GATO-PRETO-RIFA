@@ -2,15 +2,32 @@ import React, { useState } from 'react';
 import { Mail, Phone, User, MessageSquare, Send, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { raffleService } from '../services/raffleService';
+import { useCustomerAuth } from '../context/CustomerContext';
 
 export const SupportPage: React.FC = () => {
-  const [name, setName] = useState('');
+  const { customer } = useCustomerAuth();
+  const [name, setName] = useState(customer?.fullName || '');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(customer?.phone || '');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  React.useEffect(() => {
+    if (customer) {
+      if (customer.fullName) setName(customer.fullName);
+      if (customer.phone) {
+        let val = customer.phone.replace(/\D/g, '');
+        let formatted = val;
+        if (val.length > 10) formatted = val.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+        else if (val.length > 5) formatted = val.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+        else if (val.length > 2) formatted = val.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+        setPhone(formatted);
+      }
+    }
+  }, [customer]);
+
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');

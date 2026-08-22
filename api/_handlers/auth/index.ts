@@ -8,39 +8,20 @@ export async function handleAuth(req: Request, res: Response) {
 
   try {
     const action = req.body?.action;
-    const { identifier, password, profile, updates } = req.body;
+    const { cpf, phone, profile, updates } = req.body;
 
-    if (action === 'login') {
-      const cleanId = (identifier || '').replace(/\D/g, '');
+    if (action === "login") {
+      const cleanCpf = (cpf || "").replace(/\D/g, "");
+      const cleanPhone = (phone || "").replace(/\D/g, "");
+      if (!cleanCpf || !cleanPhone) return res.status(400).json({ success: false, error: "CPF e Telefone são obrigatórios." });
       const { data: user } = await supabaseServer
-        .from('profiles')
-        .select('*')
-        .or(`cpf.eq.${cleanId},phone.eq.${cleanId}`)
+        .from("profiles")
+        .select("*")
+        .eq("cpf", cleanCpf)
+        .eq("phone", cleanPhone)
         .single();
-        
       if (!user) {
         return res.status(401).json({ success: false, error: 'Nenhum cadastro encontrado com este Telefone ou CPF.' });
-      }
-
-      if (password && user.password) {
-        // Migration check: if password is not a bcrypt hash, verify plaintext and upgrade
-        if (!user.password.startsWith('$2a$') && !user.password.startsWith('$2b$')) {
-          if (user.password !== password) {
-            return res.status(401).json({ success: false, error: 'Senha incorreta.' });
-          }
-          // Upgrade to bcrypt
-          const hash = await bcrypt.hash(password, 10);
-          await supabaseServer.from('profiles').update({ password: hash }).eq('id', user.id);
-        } else {
-          // Verify bcrypt hash
-          const match = await bcrypt.compare(password, user.password);
-          if (!match) {
-            return res.status(401).json({ success: false, error: 'Senha incorreta.' });
-          }
-        }
-      } else if (password && !user.password) {
-         // Profile has no password but user tried to login with one
-         return res.status(401).json({ success: false, error: 'Usuário não possui senha cadastrada.' });
       }
       
       // Remove password from returned profile

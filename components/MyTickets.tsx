@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export const MyTickets: React.FC = () => {
   const { customer, openAuthModal, login } = useCustomerAuth();
-  const [cpf, setCpf] = useState('');
+  const [cpf, setCpf] = useState("");
+  const [phone, setPhone] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [purchases, setPurchases] = useState<Purchase[] | null>(null);
@@ -64,15 +65,26 @@ export const MyTickets: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 11) value = value.slice(0, 11);
+    if (value.length > 10) value = value.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+    else if (value.length > 5) value = value.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3");
+    else if (value.length > 2) value = value.replace(/^(\d{2})(\d{0,5})$/, "($1) $2");
+    setPhone(value);
+  };
+
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '');
+    const cleanCpf = cpf.replace(/\D/g, "");
+    const cleanPhone = phone.replace(/\D/g, "");
+
+    if (cleanCpf.length < 11 || cleanPhone.length < 10) return;
     if (value.length > 11) value = value.slice(0, 11);
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     setCpf(value);
   };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCpf = cpf.replace(/\D/g, '');
@@ -123,69 +135,19 @@ export const MyTickets: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto min-h-[80vh] px-4 py-12 animate-in fade-in duration-700">
       {!customer ? (
-        <>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-black text-white mb-4 uppercase tracking-tighter">Acesse seus bilhetes</h2>
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Utilize seu CPF e senha para entrar</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center max-w-lg mx-auto">
+          <div className="w-20 h-20 bg-brand-primary/10 border border-brand-primary/30 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-brand-primary/5">
+            <TicketIcon size={32} className="text-brand-primary" />
           </div>
-
-          <div className="bg-brand-card border border-brand-border rounded-3xl p-6 mb-12 shadow-2xl max-w-lg mx-auto">
-            {formError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-6 flex flex-col items-center justify-center gap-3 text-red-400 text-xs font-bold text-center">
-                <div className="flex items-center gap-2">
-                    <AlertTriangle size={18} className="flex-shrink-0" />
-                    {formError}
-                </div>
-                {formError.includes('não possui uma conta') && (
-                    <button
-                        onClick={() => openAuthModal('register')}
-                        className="px-4 py-2 mt-2 bg-brand-primary text-black rounded-xl hover:bg-brand-primary-light font-bold transition-colors uppercase tracking-wider"
-                    >
-                        Criar Conta
-                    </button>
-                )}
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="space-y-1">
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-2">CPF do Participante</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                  <input 
-                      type="tel" 
-                      value={cpf}
-                      onChange={handleCpfChange}
-                      placeholder="000.000.000-00"
-                      maxLength={14}
-                      className="w-full bg-brand-bg border-2 border-brand-border rounded-2xl pl-12 pr-6 py-4 text-white text-xl font-black focus:border-brand-primary outline-none transition-all placeholder:text-zinc-800"
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit"
-                disabled={loading || cpf.length < 14}
-                className="w-full px-10 py-4 bg-brand-primary hover:bg-brand-primary-dark disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-black rounded-2xl transition-all shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2 uppercase tracking-tighter"
-              >
-                {loading ? <Loader2 className="animate-spin" /> : (
-                  <>
-                    <LogIn size={20} /> Entrar
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="flex items-center justify-center gap-8 mt-8 pt-8 border-t border-brand-border opacity-30 grayscale">
-              <div className="flex items-center gap-1.5 text-[9px] font-black text-white uppercase tracking-widest">
-                  <ShieldCheck size={14} className="text-brand-primary" /> 100% Seguro
-              </div>
-              <div className="flex items-center gap-1.5 text-[9px] font-black text-white uppercase tracking-widest">
-                  <Lock size={14} className="text-brand-primary" /> Criptografado
-              </div>
-            </div>
-          </div>
-        </>
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-4 uppercase tracking-tighter">Acesse seus bilhetes</h2>
+          <p className="text-zinc-400 text-sm font-bold mb-8">Faça login com seu CPF e Telefone para visualizar todas as suas compras e bilhetes da sorte.</p>
+          <button 
+              onClick={() => openAuthModal('login')}
+              className="w-full px-10 py-5 bg-brand-primary hover:bg-brand-primary-dark text-black font-black rounded-2xl transition-all shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2 uppercase tracking-tighter text-lg"
+          >
+              <LogIn size={24} /> Entrar na Minha Conta
+          </button>
+        </div>
       ) : (
         <>
           <div className="text-center mb-12">

@@ -9,7 +9,7 @@ interface CustomerContextType {
   openAuthModal: (mode?: 'login' | 'register') => void;
   closeAuthModal: () => void;
   authModalMode: 'login' | 'register';
-  login: (identifier: string, password?: string) => Promise<Profile>;
+  login: (cpf: string, phone: string) => Promise<Profile>;
   register: (data: Partial<Profile>) => Promise<Profile>;
   logout: () => void;
   refreshCustomer: () => Promise<void>;
@@ -52,8 +52,8 @@ export const CustomerProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     refreshCustomer();
   }, []);
 
-  const login = async (identifier: string, password?: string): Promise<Profile> => {
-    const prof = await raffleService.loginCustomer(identifier, password);
+  const login = async (cpf: string, phone: string): Promise<Profile> => {
+    const prof = await raffleService.loginCustomer(cpf, phone);
     setCustomer(prof);
     setIsAuthModalOpen(false);
     return prof;
