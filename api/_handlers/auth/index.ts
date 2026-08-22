@@ -44,21 +44,11 @@ export async function handleAuth(req: Request, res: Response) {
       }
       
       // Remove password from returned profile
-      delete user.password;
       const camelCaseUser = {
         id: user.id,
         fullName: user.full_name,
         cpf: user.cpf,
         phone: user.phone,
-        email: user.email,
-        birthDate: user.birth_date,
-        cep: user.cep,
-        address: user.address,
-        number: user.number,
-        neighborhood: user.neighborhood,
-        city: user.city,
-        state: user.state,
-        complement: user.complement,
         role: user.role,
         createdAt: user.created_at
       };
@@ -70,21 +60,8 @@ export async function handleAuth(req: Request, res: Response) {
         full_name: profile.fullName,
         cpf: profile.cpf?.replace(/\D/g, ''),
         phone: profile.phone?.replace(/\D/g, ''),
-        email: profile.email,
-        birth_date: profile.birthDate,
-        cep: profile.cep,
-        address: profile.address,
-        number: profile.number,
-        neighborhood: profile.neighborhood,
-        city: profile.city,
-        state: profile.state,
-        complement: profile.complement,
         role: 'user'
       };
-
-      if (profile.password) {
-        insertData.password = await bcrypt.hash(profile.password, 10);
-      }
 
       const { data, error } = await supabaseServer
         .from('profiles')
@@ -96,21 +73,11 @@ export async function handleAuth(req: Request, res: Response) {
          return res.status(400).json({ success: false, error: error.message });
       }
       
-      delete data.password;
       const camelCaseData = {
         id: data.id,
         fullName: data.full_name,
         cpf: data.cpf,
         phone: data.phone,
-        email: data.email,
-        birthDate: data.birth_date,
-        cep: data.cep,
-        address: data.address,
-        number: data.number,
-        neighborhood: data.neighborhood,
-        city: data.city,
-        state: data.state,
-        complement: data.complement,
         role: data.role,
         createdAt: data.created_at
       };
@@ -122,19 +89,6 @@ export async function handleAuth(req: Request, res: Response) {
       const payload: any = {};
       if (updates.fullName !== undefined) payload.full_name = updates.fullName;
       if (updates.phone !== undefined) payload.phone = updates.phone?.replace(/\D/g, '');
-      if (updates.birthDate !== undefined) payload.birth_date = updates.birthDate;
-      if (updates.email !== undefined) payload.email = updates.email;
-      if (updates.cep !== undefined) payload.cep = updates.cep;
-      if (updates.address !== undefined) payload.address = updates.address;
-      if (updates.number !== undefined) payload.number = updates.number;
-      if (updates.neighborhood !== undefined) payload.neighborhood = updates.neighborhood;
-      if (updates.city !== undefined) payload.city = updates.city;
-      if (updates.state !== undefined) payload.state = updates.state;
-      if (updates.complement !== undefined) payload.complement = updates.complement;
-
-      if (updates.password) {
-        payload.password = await bcrypt.hash(updates.password, 10);
-      }
 
       const { error } = await supabaseServer
         .from('profiles')

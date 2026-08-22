@@ -34,16 +34,8 @@ export async function handleSearchTickets(req: Request, res: Response) {
     // Check if registration is complete BEFORE masking
     const hasName = !!(profile.full_name && profile.full_name.trim() && !profile.full_name.startsWith('Cliente '));
     const hasCpf = dbPhone.length >= 10; // Cpf is always 11 if we got here but phone is what matters too
-    const hasEmail = !!(profile.email && profile.email.includes('@') && !profile.email.includes('@example.invalid'));
-    const hasBirth = !!(profile.birth_date && profile.birth_date.trim());
-    const hasCep = !!(profile.cep && profile.cep.replace(/\D/g, '').length === 8);
-    const hasAddr = !!(profile.address && profile.address.trim());
-    const hasNum = !!(profile.number && profile.number.trim());
-    const hasNeigh = !!(profile.neighborhood && profile.neighborhood.trim());
-    const hasCity = !!(profile.city && profile.city.trim());
-    const hasState = !!(profile.state && profile.state.trim());
 
-    const registrationComplete = hasName && hasEmail && hasBirth && hasCep && hasAddr && hasNum && hasNeigh && hasCity && hasState;
+    const registrationComplete = hasName && hasCpf;
 
     // 2. Mask Profile PII and format to camelCase for the frontend
     const maskedProfile = {

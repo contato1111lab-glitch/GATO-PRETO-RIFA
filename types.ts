@@ -41,16 +41,6 @@ export interface Profile {
   fullName: string;
   cpf: string;
   phone: string;
-  email?: string;
-  password?: string;
-  birthDate?: string;
-  cep?: string;
-  address?: string;
-  number?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-  complement?: string;
   role: 'admin' | 'superadmin' | 'user';
   createdAt: string;
 }

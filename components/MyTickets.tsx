@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'motion/react';
 export const MyTickets: React.FC = () => {
   const { customer, openAuthModal, login } = useCustomerAuth();
   const [cpf, setCpf] = useState('');
-  const [password, setPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [purchases, setPurchases] = useState<Purchase[] | null>(null);
@@ -40,44 +39,6 @@ export const MyTickets: React.FC = () => {
         
         const isComplete = data.registrationComplete;
         setIsPendingRegistration(!isComplete);
-
-        if (data.profile) {
-          // DO NOT USE MASKED DATA FOR FORM STATE
-          // We use the `cleanPhone` provided by the user to the search function instead of the API response
-          let formattedPhone = '';
-          const cleanP = cleanPhone.replace(/\D/g, '');
-          if (cleanP.length === 11) {
-            formattedPhone = cleanP.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
-          } else if (cleanP.length === 10) {
-            formattedPhone = cleanP.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
-          }
-
-          const safeFullName = data.profile.fullName && !data.profile.fullName.includes('*') && !data.profile.fullName.startsWith('Cliente ') ? data.profile.fullName : '';
-          const safeEmail = data.profile.email && !data.profile.email.includes('*') && !data.profile.email.includes('@example.invalid') ? data.profile.email : '';
-          
-          let formattedCep = data.profile.cep || '';
-          if (formattedCep.includes('*')) formattedCep = '';
-          const cleanCepVal = formattedCep.replace(/\D/g, '');
-          if (cleanCepVal.length === 8) {
-            formattedCep = cleanCepVal.replace(/^(\d{5})(\d{3})$/, '$1-$2');
-          }
-
-          setFormState({
-            fullName: safeFullName,
-            phone: formattedPhone,
-            phoneConfirm: formattedPhone,
-            email: safeEmail,
-            password: '',
-            birthDate: data.profile.birthDate && !data.profile.birthDate.includes('*') ? data.profile.birthDate : '',
-            cep: formattedCep,
-            address: data.profile.address && !data.profile.address.includes('*') ? data.profile.address : '',
-            number: data.profile.number && !data.profile.number.includes('*') ? data.profile.number : '',
-            neighborhood: data.profile.neighborhood && !data.profile.neighborhood.includes('*') ? data.profile.neighborhood : '',
-            city: data.profile.city && !data.profile.city.includes('*') ? data.profile.city : '',
-            state: data.profile.state && !data.profile.state.includes('*') ? data.profile.state : '',
-            complement: data.profile.complement && !data.profile.complement.includes('*') ? data.profile.complement : ''
-          });
-        }
         setSearched(true);
       }
     } catch (error) {
@@ -100,29 +61,8 @@ export const MyTickets: React.FC = () => {
     }
   }, [customer, loadCustomerTickets]);
 
-  // Form state for profile completion
-  const [formState, setFormState] = useState({
-    fullName: '',
-    phone: '',
-    phoneConfirm: '',
-    email: '',
-    password: '',
-    birthDate: '',
-    cep: '',
-    address: '',
-    number: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-    complement: ''
-  });
-
-  const [fetchingCep, setFetchingCep] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -133,63 +73,11 @@ export const MyTickets: React.FC = () => {
     setCpf(value);
   };
 
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'phone' | 'phoneConfirm') => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 11) value = value.slice(0, 11);
-
-    let formatted = value;
-    if (value.length > 10) {
-      formatted = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
-    } else if (value.length > 6) {
-      formatted = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
-    } else if (value.length > 2) {
-      formatted = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
-    } else if (value.length > 0) {
-      formatted = value.replace(/^(\d*)/, '($1');
-    }
-    setFormState(prev => ({ ...prev, [field]: formatted }));
-  };
-
-  const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 8) val = val.slice(0, 8);
-    let formatted = val;
-    if (val.length > 5) {
-      formatted = val.replace(/^(\d{5})(\d)/, '$1-$2');
-    }
-    setFormState(prev => ({ ...prev, cep: formatted }));
-
-    if (val.length === 8) {
-      setFetchingCep(true);
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${val}/json/`);
-        const data = await res.json();
-        if (!data.erro) {
-          setFormState(prev => ({
-            ...prev,
-            address: data.logradouro || prev.address,
-            neighborhood: data.bairro || prev.neighborhood,
-            city: data.localidade || prev.city,
-            state: data.uf || prev.state
-          }));
-        }
-      } catch (err) {
-        console.error('ViaCEP fetch error:', err);
-      } finally {
-        setFetchingCep(false);
-      }
-    }
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCpf = cpf.replace(/\D/g, '');
 
     if (cleanCpf.length < 11) return;
-    if (!password.trim()) {
-      setFormError("Informe a senha.");
-      return;
-    }
 
     setLoading(true);
     setSelectedRaffleId(null);
@@ -197,129 +85,16 @@ export const MyTickets: React.FC = () => {
     setSuccessMsg(null);
 
     try {
-      await login(cleanCpf, password);
-      // login success sets customer, which triggers useEffect to load tickets!
+      await login(cleanCpf);
     } catch (err: any) {
       console.error(err);
       if (err.message?.includes('Nenhum cadastro')) {
         setFormError('Você ainda não possui uma conta.');
       } else {
-        setFormError('CPF ou senha incorretos.');
+        setFormError('CPF incorreto ou conta não encontrada.');
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSaveRegistration = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-
-    const cleanCpfVal = cpf.replace(/\D/g, '');
-    const cleanPhoneVal = formState.phone.replace(/\D/g, '');
-    const cleanConfirmPhoneVal = formState.phoneConfirm.replace(/\D/g, '');
-    const cleanCepVal = formState.cep.replace(/\D/g, '');
-
-    if (!formState.fullName.trim() || formState.fullName.startsWith('Cliente ')) {
-      setFormError('Informe seu nome completo.');
-      return;
-    }
-    if (cleanPhoneVal.length < 10) {
-      setFormError('Informe um telefone válido com DDD.');
-      return;
-    }
-    if (cleanPhoneVal !== cleanConfirmPhoneVal) {
-      setFormError('A confirmação de telefone não confere com o telefone informado.');
-      return;
-    }
-    if (!formState.email.trim() || !formState.email.includes('@')) {
-      setFormError('Informe um e-mail válido.');
-      return;
-    }
-
-    if (!formState.password.trim()) {
-      setFormError('A senha é obrigatória.');
-      return;
-    }
-    if (!formState.birthDate.trim()) {
-      setFormError('Informe sua data de nascimento.');
-      return;
-    }
-    if (cleanCepVal.length < 8) {
-      setFormError('Informe um CEP válido com 8 dígitos.');
-      return;
-    }
-    if (!formState.address.trim()) {
-      setFormError('Informe o logradouro / endereço.');
-      return;
-    }
-    if (!formState.number.trim()) {
-      setFormError('Informe o número do endereço.');
-      return;
-    }
-    if (!formState.neighborhood.trim()) {
-      setFormError('Informe o bairro.');
-      return;
-    }
-    if (!formState.city.trim()) {
-      setFormError('Informe a cidade.');
-      return;
-    }
-    if (!formState.state.trim()) {
-      setFormError('Informe a UF (estado).');
-      return;
-    }
-
-    setSavingProfile(true);
-    try {
-      let targetProfileId = profile?.id;
-      if (!targetProfileId) {
-        const newP = await raffleService.createProfile({
-          fullName: formState.fullName.trim(),
-          cpf: cleanCpfVal,
-          phone: cleanPhoneVal,
-          email: formState.email.trim(),
-          password: formState.password.trim() || undefined,
-          birthDate: formState.birthDate,
-          cep: cleanCepVal,
-          address: formState.address.trim(),
-          number: formState.number.trim(),
-          neighborhood: formState.neighborhood.trim(),
-          city: formState.city.trim(),
-          state: formState.state.trim(),
-          complement: formState.complement.trim()
-        });
-        targetProfileId = newP.id;
-        setProfile(newP);
-      } else {
-        await raffleService.updateProfile(targetProfileId, {
-          fullName: formState.fullName.trim(),
-          phone: cleanPhoneVal,
-          email: formState.email.trim(),
-          password: formState.password.trim() || undefined,
-          birthDate: formState.birthDate,
-          cep: cleanCepVal,
-          address: formState.address.trim(),
-          number: formState.number.trim(),
-          neighborhood: formState.neighborhood.trim(),
-          city: formState.city.trim(),
-          state: formState.state.trim(),
-          complement: formState.complement.trim()
-        });
-      }
-
-      setIsPendingRegistration(false);
-      setSuccessMsg('Cadastro concluído com sucesso! Suas cotas foram liberadas.');
-      setTimeout(() => setSuccessMsg(null), 6000);
-
-      // Auto login triggers context update and reloads tickets automatically
-      await login(cleanCpfVal, formState.password.trim());
-      
-    } catch (err: any) {
-      console.error('Error saving profile:', err);
-      setFormError(err.message || 'Erro ao salvar cadastro. Tente novamente.');
-    } finally {
-      setSavingProfile(false);
     }
   };
 
@@ -387,24 +162,10 @@ export const MyTickets: React.FC = () => {
                   />
                 </div>
               </div>
-              
-              <div className="space-y-1">
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-2">Senha</label>
-                <div className="relative">
-                  <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                  <input 
-                      type="password" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Sua senha secreta"
-                      className="w-full bg-brand-bg border-2 border-brand-border rounded-2xl pl-12 pr-6 py-4 text-white text-xl font-black focus:border-brand-primary outline-none transition-all placeholder:text-zinc-800"
-                  />
-                </div>
-              </div>
 
               <button 
                 type="submit"
-                disabled={loading || cpf.length < 14 || !password.trim()}
+                disabled={loading || cpf.length < 14}
                 className="w-full px-10 py-4 bg-brand-primary hover:bg-brand-primary-dark disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-black rounded-2xl transition-all shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2 uppercase tracking-tighter"
               >
                 {loading ? <Loader2 className="animate-spin" /> : (
@@ -451,262 +212,6 @@ export const MyTickets: React.FC = () => {
       )}
 
       {/* PENDING REGISTRATION SCREEN */}
-      {searched && isPendingRegistration && !loading && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="space-y-8"
-        >
-          {/* Warning Banner */}
-          <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-3xl p-8 text-center space-y-3">
-            <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center justify-center text-amber-400 mx-auto">
-              <AlertTriangle size={32} />
-            </div>
-            <h3 className="text-2xl font-black text-white uppercase tracking-tight">
-              Você ainda não concluiu seu cadastro
-            </h3>
-            <p className="text-white text-sm max-w-xl mx-auto leading-relaxed">
-              Sua compra foi realizada com sucesso e seus bilhetes estão garantidos! Para consultar suas cotas e participar dos sorteios, por favor conclua seu cadastro abaixo.
-            </p>
-          </div>
-
-          {/* Complete Registration Form */}
-          <div className="bg-brand-card border border-brand-border rounded-3xl p-6 md:p-10 shadow-2xl max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 pb-6 mb-8 border-b border-brand-border">
-              <div className="w-10 h-10 bg-brand-primary/20 rounded-2xl flex items-center justify-center text-brand-primary-light font-bold">
-                <UserCheck size={20} />
-              </div>
-              <div>
-                <h4 className="text-xl font-black text-white uppercase tracking-tight">Cadastro de Participante</h4>
-                <p className="text-xs text-zinc-500 font-bold">Preencha todos os dados obrigatórios para liberar seus bilhetes</p>
-              </div>
-            </div>
-
-            {formError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-6 flex items-center gap-3 text-red-400 text-xs font-bold">
-                <AlertTriangle size={18} className="flex-shrink-0" />
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveRegistration} className="space-y-6">
-              {/* Personal Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Nome Completo *</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Seu nome completo"
-                      value={formState.fullName}
-                      onChange={(e) => setFormState({ ...formState, fullName: e.target.value })}
-                      className="w-full bg-brand-bg border border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">CPF (Confirmado)</label>
-                  <div className="relative opacity-60">
-                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="text"
-                      disabled
-                      value={cpf}
-                      className="w-full bg-zinc-900 border border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-zinc-400 font-mono text-sm cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Telefone *</label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="tel"
-                      required
-                      placeholder="(00) 00000-0000"
-                      value={formState.phone}
-                      onChange={(e) => handlePhoneChange(e, 'phone')}
-                      className="w-full bg-brand-bg border border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Confirmação do Telefone *</label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="tel"
-                      required
-                      placeholder="Confirme o telefone"
-                      value={formState.phoneConfirm}
-                      onChange={(e) => handlePhoneChange(e, 'phoneConfirm')}
-                      className="w-full bg-brand-bg border border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">E-mail *</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="email"
-                      required
-                      placeholder="seu@email.com"
-                      value={formState.email}
-                      onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-                      className="w-full bg-brand-bg border border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Crie uma Senha *</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="password"
-                      required
-                      placeholder="Sua senha de acesso"
-                      value={formState.password}
-                      onChange={(e) => setFormState({ ...formState, password: e.target.value })}
-                      className="w-full bg-brand-bg border border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Data de Nascimento *</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="date"
-                      required
-                      value={formState.birthDate}
-                      onChange={(e) => setFormState({ ...formState, birthDate: e.target.value })}
-                      className="w-full bg-brand-bg border border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Address Header */}
-              <div className="pt-6 border-t border-brand-border flex items-center gap-2 text-white font-black text-sm uppercase tracking-tight">
-                <MapPin size={18} className="text-brand-primary" /> Endereço de Entrega do Prêmio
-              </div>
-
-              {/* Address Info */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-1 md:col-span-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">
-                    CEP * {fetchingCep && <span className="text-brand-primary-light lowercase animate-pulse">(buscando...)</span>}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="00000-000"
-                    maxLength={9}
-                    value={formState.cep}
-                    onChange={handleCepChange}
-                    className="w-full bg-brand-bg border border-brand-border rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1 md:col-span-2">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Logradouro / Rua *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Rua, Avenida, etc."
-                    value={formState.address}
-                    onChange={(e) => setFormState({ ...formState, address: e.target.value })}
-                    className="w-full bg-brand-bg border border-brand-border rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Número *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="123"
-                    value={formState.number}
-                    onChange={(e) => setFormState({ ...formState, number: e.target.value })}
-                    className="w-full bg-brand-bg border border-brand-border rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Bairro *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Bairro"
-                    value={formState.neighborhood}
-                    onChange={(e) => setFormState({ ...formState, neighborhood: e.target.value })}
-                    className="w-full bg-brand-bg border border-brand-border rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Cidade *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Cidade"
-                    value={formState.city}
-                    onChange={(e) => setFormState({ ...formState, city: e.target.value })}
-                    className="w-full bg-brand-bg border border-brand-border rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Estado (UF) *</label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={2}
-                    placeholder="SP"
-                    value={formState.state}
-                    onChange={(e) => setFormState({ ...formState, state: e.target.value.toUpperCase() })}
-                    className="w-full bg-brand-bg border border-brand-border rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none uppercase"
-                  />
-                </div>
-
-                <div className="space-y-1 md:col-span-2">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Complemento (Opcional)</label>
-                  <input
-                    type="text"
-                    placeholder="Apto, Bloco, etc."
-                    value={formState.complement}
-                    onChange={(e) => setFormState({ ...formState, complement: e.target.value })}
-                    className="w-full bg-brand-bg border border-brand-border rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={savingProfile}
-                className="w-full bg-brand-primary hover:bg-brand-primary-dark disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-black py-4 rounded-2xl transition-all shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2 uppercase tracking-tight text-lg mt-8"
-              >
-                {savingProfile ? <Loader2 className="animate-spin" size={20} /> : (
-                  <>
-                    <CheckCircle2 size={22} /> Concluir Cadastro e Liberar Cotas
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-        </motion.div>
-      )}
-
-      {/* COMPLETED REGISTRATION -> SHOW TICKETS */}
       {searched && !isPendingRegistration && visibleGroups.length === 0 && !loading && (
         <div className="text-center py-20 bg-brand-card border border-brand-border rounded-3xl">
           <TicketIcon className="w-20 h-20 mx-auto mb-6 text-zinc-800" />

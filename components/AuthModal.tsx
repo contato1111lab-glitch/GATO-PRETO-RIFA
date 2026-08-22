@@ -14,7 +14,6 @@ export const AuthModal: React.FC = () => {
 
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -22,17 +21,7 @@ export const AuthModal: React.FC = () => {
   const [regName, setRegName] = useState('');
   const [regCpf, setRegCpf] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regBirthDate, setRegBirthDate] = useState('');
-  const [regCep, setRegCep] = useState('');
-  const [regAddress, setRegAddress] = useState('');
-  const [regNumber, setRegNumber] = useState('');
-  const [regNeighborhood, setRegNeighborhood] = useState('');
-  const [regCity, setRegCity] = useState('');
-  const [regState, setRegState] = useState('');
   
-  const [fetchingCep, setFetchingCep] = useState(false);
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
 
@@ -60,33 +49,6 @@ export const AuthModal: React.FC = () => {
     setter(formatted);
   };
 
-  // Handle CEP lookup
-  const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 8) val = val.slice(0, 8);
-    let formatted = val;
-    if (val.length > 5) formatted = val.replace(/^(\d{5})(\d{3})$/, '$1-$2');
-    setRegCep(formatted);
-
-    if (val.length === 8) {
-      setFetchingCep(true);
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${val}/json/`);
-        const data = await res.json();
-        if (!data.erro) {
-          if (data.logradouro) setRegAddress(data.logradouro);
-          if (data.bairro) setRegNeighborhood(data.bairro);
-          if (data.localidade) setRegCity(data.localidade);
-          if (data.uf) setRegState(data.uf);
-        }
-      } catch (err) {
-        console.error('ViaCEP fetch error:', err);
-      } finally {
-        setFetchingCep(false);
-      }
-    }
-  };
-
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
@@ -97,7 +59,7 @@ export const AuthModal: React.FC = () => {
 
     setLoginLoading(true);
     try {
-      await login(loginIdentifier, loginPassword);
+      await login(loginIdentifier);
     } catch (err: any) {
       console.error(err);
       setLoginError(err.message || 'Erro ao realizar login. Verifique seus dados.');
@@ -112,7 +74,6 @@ export const AuthModal: React.FC = () => {
 
     const cleanCpf = regCpf.replace(/\D/g, '');
     const cleanPhone = regPhone.replace(/\D/g, '');
-    const cleanCep = regCep.replace(/\D/g, '');
 
     if (!regName.trim() || regName.trim().length < 3) {
       setRegError('Informe seu nome completo.');
@@ -126,31 +87,13 @@ export const AuthModal: React.FC = () => {
       setRegError('Informe um Telefone válido com DDD.');
       return;
     }
-    if (!regEmail.trim() || !regEmail.includes('@')) {
-      setRegError('Informe um e-mail válido.');
-      return;
-    }
-
-    if (!regPassword.trim()) {
-      setRegError('A senha é obrigatória.');
-      return;
-    }
 
     setRegLoading(true);
     try {
       await register({
         fullName: regName.trim(),
         cpf: cleanCpf,
-        phone: cleanPhone,
-        email: regEmail.trim(),
-        password: regPassword.trim(),
-        birthDate: regBirthDate || undefined,
-        cep: cleanCep || undefined,
-        address: regAddress.trim() || undefined,
-        number: regNumber.trim() || undefined,
-        neighborhood: regNeighborhood.trim() || undefined,
-        city: regCity.trim() || undefined,
-        state: regState.trim() || undefined
+        phone: cleanPhone
       });
     } catch (err: any) {
       console.error(err);
@@ -233,23 +176,6 @@ export const AuthModal: React.FC = () => {
                       placeholder="000.000.000-00"
                       value={loginIdentifier}
                       onChange={(e) => handleCpfChange(e, setLoginIdentifier)}
-                      className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none transition-all placeholder:text-zinc-700"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">
-                    Senha *
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="password"
-                      required
-                      placeholder="Sua senha de acesso"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
                       className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3.5 text-white font-bold text-sm focus:border-brand-primary outline-none transition-all placeholder:text-zinc-700"
                     />
                   </div>
@@ -339,92 +265,6 @@ export const AuthModal: React.FC = () => {
                       value={regPhone}
                       onChange={(e) => handlePhoneChange(e, setRegPhone)}
                       className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">E-mail *</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="email"
-                      required
-                      placeholder="seu@email.com"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Criar Senha</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                      type="password"
-                      placeholder="Crie uma senha"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      className="w-full bg-brand-card border-2 border-brand-border rounded-2xl pl-12 pr-4 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">
-                    CEP {fetchingCep && <span className="text-brand-primary-light animate-pulse">(buscando...)</span>}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="00000-000"
-                    maxLength={9}
-                    value={regCep}
-                    onChange={handleCepChange}
-                    className="w-full bg-brand-card border-2 border-brand-border rounded-2xl px-4 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Endereço</label>
-                  <input
-                    type="text"
-                    placeholder="Rua / Avenida"
-                    value={regAddress}
-                    onChange={(e) => setRegAddress(e.target.value)}
-                    className="w-full bg-brand-card border-2 border-brand-border rounded-2xl px-4 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Número</label>
-                  <input
-                    type="text"
-                    placeholder="Número"
-                    value={regNumber}
-                    onChange={(e) => setRegNumber(e.target.value)}
-                    className="w-full bg-brand-card border-2 border-brand-border rounded-2xl px-4 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Cidade / UF</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Cidade"
-                      value={regCity}
-                      onChange={(e) => setRegCity(e.target.value)}
-                      className="w-2/3 bg-brand-card border-2 border-brand-border rounded-2xl px-3 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none"
-                    />
-                    <input
-                      type="text"
-                      placeholder="UF"
-                      maxLength={2}
-                      value={regState}
-                      onChange={(e) => setRegState(e.target.value.toUpperCase())}
-                      className="w-1/3 bg-brand-card border-2 border-brand-border rounded-2xl px-3 py-3 text-white font-bold text-sm focus:border-brand-primary outline-none uppercase"
                     />
                   </div>
                 </div>

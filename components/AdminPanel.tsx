@@ -2791,8 +2791,6 @@ export const AdminPanel: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                         <td className="p-4 font-mono">{u.cpf}</td>
                                         <td className="p-4">{u.phone}</td>
                                         <td className="p-4">
-                                            <div className="text-white text-xs">{u.city || '-'}</div>
-                                            <div className="text-zinc-500 text-[10px]">{u.state || '-'}</div>
                                         </td>
                                         <td className="p-4 text-white font-bold">R$ {Number(u.totalSpent || 0).toFixed(2)}</td>
                                         <td className="p-4">
