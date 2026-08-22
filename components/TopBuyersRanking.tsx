@@ -160,7 +160,7 @@ export const TopBuyersRanking: React.FC<TopBuyersRankingProps> = ({ raffleId, co
 
   return (
     <div className="mx-4 my-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
             <Trophy className="text-brand-primary" size={20} />
             <h3 className="text-lg font-bold text-white uppercase tracking-wider">Top Compradores</h3>
@@ -177,6 +177,12 @@ export const TopBuyersRanking: React.FC<TopBuyersRankingProps> = ({ raffleId, co
           </div>
         )}
       </div>
+      
+      {rankingSettings?.enabled && rankingSettings?.minValue > 0 && (
+          <p className="text-xs text-zinc-400 mb-4">
+              Participe com no mínimo R$ {rankingSettings.minValue.toFixed(2).replace('.', ',')} em compras nesta campanha.
+          </p>
+      )}
 
       {status === 'ended' && (
         <div className="mb-4 rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-2.5 text-center">
