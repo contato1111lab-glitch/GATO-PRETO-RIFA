@@ -653,6 +653,7 @@ export const AdminPanel: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
   // Ranking Config State
   const [rankingConfig, setRankingConfig] = useState<{ position: number; prize: string }[]>([]);
+  const [rankingSettings, setRankingSettings] = useState({ enabled: false, minValue: 0 });
   const [newRankingItem, setNewRankingItem] = useState({ position: '', prize: '' });
 
   const handleAddRankingItem = () => {
@@ -674,6 +675,7 @@ export const AdminPanel: React.FC<{ onExit: () => void }> = ({ onExit }) => {
       setIsCreating(false);
       setFormData(raffle);
       setRankingConfig(raffle.rankingConfig || []); // Load ranking config
+      setRankingSettings(raffle.rankingSettings || { enabled: false, minValue: 0 });
       setManualRanking(raffle.manualRanking || []); // Load manual ranking
       loadWinningTickets(raffle.id);
       
@@ -688,6 +690,7 @@ export const AdminPanel: React.FC<{ onExit: () => void }> = ({ onExit }) => {
       setIsEditing(null);
       setWinningTickets([]);
       setRankingConfig([]); // Reset ranking config
+      setRankingSettings({ enabled: false, minValue: 0 });
       setManualRanking([]); // Reset manual ranking
       setFormData({ totalNumbers: 1000, pricePerNumber: 0.99, minPurchase: 1 });
       setManualProgressPercent(0);
@@ -814,6 +817,7 @@ export const AdminPanel: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             ...formData,
             fakeSoldNumbers: fakeSold,
             rankingConfig: rankingConfig, // Add ranking config
+            rankingSettings: rankingSettings,
             manualRanking: manualRanking, // Add manual ranking
             isFeatured: formData.isFeatured ?? false,
             totalNumbers: total,
@@ -858,6 +862,7 @@ export const AdminPanel: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                   winnerNumber: formData.winnerNumber || null,
                   winnerName: formData.winnerName || null,
                   rankingConfig: rankingConfig, // Add ranking config
+            rankingSettings: rankingSettings,
                   manualRanking: manualRanking, // Add manual ranking
                   isFeatured: formData.isFeatured ?? false,
                   drawDate: formData.drawDate || null,
@@ -2132,6 +2137,38 @@ export const AdminPanel: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                         </h3>
                                         <p className="text-zinc-500 text-xs mb-4">Defina prêmios para quem comprar mais cotas. Ex: 1º Lugar ganha iPhone.</p>
                                         
+                                        {/* Ranking Settings Config */}
+                                        <div className="mb-6 border-b border-zinc-800 pb-6 bg-zinc-900/50 p-4 rounded-lg space-y-4">
+                                            <div className="flex items-center gap-3">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="enableRankingValue"
+                                                    checked={rankingSettings.enabled}
+                                                    onChange={(e) => setRankingSettings({...rankingSettings, enabled: e.target.checked})}
+                                                    className="w-4 h-4 rounded border-zinc-700 text-brand-primary focus:ring-brand-primary bg-black"
+                                                />
+                                                <label htmlFor="enableRankingValue" className="text-sm font-bold text-white cursor-pointer">
+                                                    Ativar regra de valor mínimo (Apenas elegíveis entram no ranking)
+                                                </label>
+                                            </div>
+                                            
+                                            {rankingSettings.enabled && (
+                                                <div className="animate-in fade-in slide-in-from-top-1">
+                                                    <label className="label-admin">Valor mínimo para participar (R$)</label>
+                                                    <input 
+                                                        type="number"
+                                                        placeholder="Ex: 50.00"
+                                                        className="input-admin w-1/3"
+                                                        value={rankingSettings.minValue || ''}
+                                                        onChange={(e) => setRankingSettings({...rankingSettings, minValue: parseFloat(e.target.value) || 0})}
+                                                    />
+                                                    <p className="text-[10px] text-zinc-500 mt-1">
+                                                        Somente compradores cujo <strong>total de cotas PAGAS multiplicadas pelo preço da cota</strong> for igual ou superior a este valor aparecerão no pódio.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
                                         {/* Ranking Period Config */}
                                         <div className="grid grid-cols-2 gap-4 mb-6 border-b border-zinc-800 pb-6 bg-zinc-900/50 p-4 rounded-lg">
                                             <div>

@@ -18,6 +18,7 @@ interface TopBuyersRankingProps {
    * produzia efeito nenhum para o visitante.
    */
   manualEntries?: { name: string; phone?: string; totalTickets: number }[];
+  rankingSettings?: { enabled: boolean; minValue: number };
 }
 
 type CycleStatus = 'pending' | 'live' | 'ended';
@@ -57,7 +58,7 @@ interface RankingItem {
   ranking: number;
 }
 
-export const TopBuyersRanking: React.FC<TopBuyersRankingProps> = ({ raffleId, config, pricePerNumber, startDate, endDate, manualEntries }) => {
+export const TopBuyersRanking: React.FC<TopBuyersRankingProps> = ({ raffleId, config, pricePerNumber, startDate, endDate, manualEntries, rankingSettings }) => {
   const [ranking, setRanking] = useState<RankingItem[]>([]);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

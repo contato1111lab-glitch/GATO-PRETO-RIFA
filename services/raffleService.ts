@@ -158,7 +158,7 @@ export const raffleService = {
   async getRaffleRanking(raffleId: string, maxPosition?: number): Promise<any[]> {
     const { data: raffle } = await supabase
       .from('raffles')
-      .select('ranking_start_date, ranking_end_date')
+      .select('ranking_start_date, ranking_end_date, ranking_config, price_per_number')
       .eq('id', raffleId)
       .maybeSingle();
 
@@ -180,7 +180,16 @@ export const raffleService = {
       if (t.owner_user_id) counts.set(t.owner_user_id, (counts.get(t.owner_user_id) || 0) + 1);
     });
 
+    const isObj = raffle?.ranking_config && !Array.isArray(raffle.ranking_config);
+    const minPurchaseConfig = isObj ? (raffle.ranking_config.minValue || 0) : 0;
+    const isEnabled = isObj ? (raffle.ranking_config.enabled || false) : false;
+    const pricePerNumber = raffle?.price_per_number || 0;
+
     const top = [...counts.entries()]
+      .filter(([id, qty]) => {
+          if (!isEnabled || !minPurchaseConfig) return true;
+          return (qty * pricePerNumber) >= minPurchaseConfig;
+      })
       .sort((a, b) => b[1] - a[1])
       .slice(0, maxPosition || 100);
 
@@ -256,7 +265,8 @@ export const raffleService = {
       drawDate: data.draw_date,
       isFeatured: data.is_featured || false,
       useSecondaryGateway: data.use_secondary_gateway || false,
-      rankingConfig: data.ranking_config || [],
+      rankingConfig: (data.ranking_config && !Array.isArray(data.ranking_config)) ? (data.ranking_config.prizes || []) : (data.ranking_config || []),
+      rankingSettings: (data.ranking_config && !Array.isArray(data.ranking_config)) ? { enabled: data.ranking_config.enabled || false, minValue: data.ranking_config.minValue || 0 } : { enabled: false, minValue: 0 },
       rankingStartDate: data.ranking_start_date,
       rankingEndDate: data.ranking_end_date,
       securityMarginPercent: data.security_margin_percent || 0,
@@ -335,7 +345,8 @@ export const raffleService = {
         
         
         useSecondaryGateway: r.use_secondary_gateway || false,
-        rankingConfig: r.ranking_config || [],
+        rankingConfig: (r.ranking_config && !Array.isArray(r.ranking_config)) ? (r.ranking_config.prizes || []) : (r.ranking_config || []),
+        rankingSettings: (r.ranking_config && !Array.isArray(r.ranking_config)) ? { enabled: r.ranking_config.enabled || false, minValue: r.ranking_config.minValue || 0 } : { enabled: false, minValue: 0 },
         rankingStartDate: r.ranking_start_date,
         rankingEndDate: r.ranking_end_date,
         securityMarginPercent: r.security_margin_percent || 0,
@@ -963,7 +974,11 @@ export const raffleService = {
           show_ranking: data.showRanking ?? true,
           terms_and_rules: data.termsAndRules || null,
           is_featured: data.isFeatured ?? false,
-          ranking_config: data.rankingConfig || [],
+          ranking_config: {
+            prizes: data.rankingConfig || [],
+            enabled: data.rankingSettings?.enabled ?? false,
+            minValue: data.rankingSettings?.minValue ?? 0
+          },
           manual_ranking: data.manualRanking || [],
       };
       
@@ -997,7 +1012,11 @@ export const raffleService = {
           show_ranking: updates.showRanking,
           terms_and_rules: updates.termsAndRules,
           is_featured: updates.isFeatured,
-          ranking_config: updates.rankingConfig,
+          ranking_config: updates.rankingConfig || updates.rankingSettings ? {
+              prizes: updates.rankingConfig || [],
+              enabled: updates.rankingSettings?.enabled ?? false,
+              minValue: updates.rankingSettings?.minValue ?? 0
+          } : undefined,
           manual_ranking: updates.manualRanking,
      };
      

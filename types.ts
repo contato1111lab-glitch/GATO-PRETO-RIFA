@@ -25,6 +25,7 @@ export interface Raffle {
   scratchCardCombos?: { quantity: number; price: number }[];
   useSecondaryGateway?: boolean;
   rankingConfig?: { position: number; prize: string }[];
+  rankingSettings?: { enabled: boolean; minValue: number };
   rankingStartDate?: string;
   rankingEndDate?: string;
   securityMarginPercent?: number;
